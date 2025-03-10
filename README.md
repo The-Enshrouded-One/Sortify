@@ -1,69 +1,70 @@
-# Welcome to your Lovable project
+---
 
-## Project info
+# 🚀 AlgoLens - Algorithm Visualization & Performance Analysis  
 
-**URL**: https://lovable.dev/projects/c4ee2dfe-6fc5-4cd8-b105-459b113ccac9
+AlgoLens is a powerful **algorithm visualization** and **performance analysis** tool built using **React, TypeScript, Tailwind CSS, and Vite**. It provides **real-time visualization** of various sorting, searching, and graph traversal algorithms, along with a **race mode** to compare their efficiency.  
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🎯 Features  
+✅ **Sorting Algorithms:** Bubble Sort, Selection Sort, Insertion Sort, Quick Sort, Merge Sort  
+✅ **Searching Algorithms:** Linear Search, Binary Search  
+✅ **Graph Algorithms:** BFS, DFS, Dijkstra's Algorithm  
+✅ **Race Mode:** Compare multiple algorithms side by side based on execution time and complexity  
+✅ **Step-by-Step Execution:** View each step in detail with performance metrics  
+✅ **Dark Mode Support** 🌙  
+✅ **Interactive UI** with dynamic array generation and speed control  
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c4ee2dfe-6fc5-4cd8-b105-459b113ccac9) and start prompting.
+## 🛠️ Tech Stack  
+- **Frontend:** React, TypeScript, Vite  
+- **Styling:** Tailwind CSS  
+- **Icons & Components:** Lucide React  
+- **State Management:** useState, useEffect  
+- **Routing:** React Router  
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🚀 Installation & Setup  
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+### 1️⃣ Clone the repository  
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+git clone https://github.com/pawarsarth/Algo_lens.git
+cd Algo_lens
 ```
 
-**Edit a file directly in GitHub**
+### 2️⃣ Install dependencies  
+```sh
+npm install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 3️⃣ Start the development server  
+```sh
+npm run dev
+```
+The project will be available at `http://localhost:5173/`.  
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🏗️ Build for Production  
+```sh
+npm run build
+```
+This generates an optimized `dist/` folder ready for deployment.  
 
-## What technologies are used for this project?
+---
 
-This project is built with .
+## 🤝 Contributing  
+Contributions are welcome! Feel free to fork the repository and submit a pull request.  
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## 📝 License  
+This project is **open-source** and available under the **MIT License**.  
 
-Simply open [Lovable](https://lovable.dev/projects/c4ee2dfe-6fc5-4cd8-b105-459b113ccac9) and click on Share -> Publish.
+---
 
-## I want to use a custom domain - is that possible?
+🚀 **Happy Coding & Algorithm Visualization!** 🎨  
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+
