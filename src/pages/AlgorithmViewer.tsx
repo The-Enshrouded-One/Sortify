@@ -73,13 +73,13 @@ const AlgorithmViewer = () => {
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const addStep = (description: string, detail: string) => {
+  const addStep = (description: string, detail: string, comparisons: number, swaps: number) => {
     const newStep: Step = {
       description,
       detail,
-      comparisons: metrics.comparisons,
-      swaps: metrics.swaps,
-      timeElapsed: Date.now() - metrics.startTime
+      comparisons,
+      swaps,
+      timeElapsed: Date.now() - metrics.startTime,
     };
     setSteps(prev => [...prev, newStep]);
     setCurrentStepIndex(prev => prev + 1);
@@ -132,14 +132,32 @@ const AlgorithmViewer = () => {
   };
 
   const compare = (a: number, b: number): boolean => {
-    setMetrics(prev => ({ ...prev, comparisons: prev.comparisons + 1 }));
+    setMetrics(prev => {
+      const updatedMetrics = { ...prev, comparisons: prev.comparisons + 1 };
+      addStep(
+        `Comparing ${a} and ${b}`,
+        `Comparison made`,
+        updatedMetrics.comparisons,
+        updatedMetrics.swaps
+      );
+      return updatedMetrics;
+    });
     return a > b;
   };
 
   const swap = (arr: number[], i: number, j: number) => {
-    setMetrics(prev => ({ ...prev, swaps: prev.swaps + 1 }));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  };
+  setMetrics(prev => {
+    const updatedMetrics = { ...prev, swaps: prev.swaps + 1 };
+    addStep(
+      `Swapping ${arr[i]} and ${arr[j]}`,
+      `Swapped elements at indices ${i} and ${j}`,
+      updatedMetrics.comparisons,
+      updatedMetrics.swaps
+    );
+    return updatedMetrics;
+  });
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+};
 
   // Sorting Algorithms
   const bubbleSort = async () => {
@@ -153,13 +171,24 @@ const AlgorithmViewer = () => {
         setCurrentStep([j, j + 1]);
         addStep(
           `Comparing ${arr[j]} and ${arr[j + 1]}`,
-          `Pass ${i + 1}, Step ${j + 1}`
+          `Pass ${i + 1}, Step ${j + 1}`,
+          metrics.comparisons,
+          metrics.swaps
         );
         await sleep(animationSpeed);
         
-        if (compare(arr[j], arr[j + 1])) {
+        const comparisonResult = compare(arr[j], arr[j + 1]);
+        if (comparisonResult) {
           swap(arr, j, j + 1);
           setArray([...arr]);
+        } else {
+          // Add a step for when no swap occurs
+          addStep(
+            `No swap needed for ${arr[j]} and ${arr[j + 1]}`,
+            `Pass ${i + 1}, Step ${j + 1}`,
+            metrics.comparisons,
+            metrics.swaps
+          );
         }
       }
       setCompleted(prev => [...prev, n - 1 - i]);
@@ -179,19 +208,38 @@ const AlgorithmViewer = () => {
       setCurrentStep([i]);
       addStep(
         `Current element: ${key}`,
-        `Finding correct position for ${key}`
+        `Finding correct position for ${key}`,
+        metrics.comparisons,
+        metrics.swaps
       );
       await sleep(animationSpeed);
       
-      while (j >= 0 && compare(arr[j], key)) {
-        if (!runningRef.current) return;
-        arr[j + 1] = arr[j];
-        setArray([...arr]);
+      while (j >= 0) {
         setCurrentStep([j]);
+        addStep(
+          `Comparing ${arr[j]} with ${key}`,
+          `Finding correct position for ${key}`,
+          metrics.comparisons,
+          metrics.swaps
+        );
         await sleep(animationSpeed);
-        j--;
+
+        if (compare(arr[j], key)) {
+          setMetrics(prev => ({ ...prev, swaps: prev.swaps + 1 })); // Increment swaps
+          arr[j + 1] = arr[j];
+          setArray([...arr]);
+          j--;
+        } else {
+          // Add a step for when no shift occurs
+          addStep(
+            `No shift needed for ${arr[j]} and ${key}`,
+            `Finding correct position for ${key}`,
+            metrics.comparisons,
+            metrics.swaps
+          );
+          break;
+        }
       }
-      
       arr[j + 1] = key;
       setArray([...arr]);
       setCompleted(prev => [...prev, i]);
@@ -212,16 +260,28 @@ const AlgorithmViewer = () => {
         setCurrentStep([minIdx, j]);
         addStep(
           `Comparing ${arr[j]} with current minimum ${arr[minIdx]}`,
-          `Finding minimum element`
+          `Finding minimum element`,
+          metrics.comparisons,
+          metrics.swaps
         );
         await sleep(animationSpeed);
         
-        if (compare(arr[minIdx], arr[j])) {
+        const comparisonResult = compare(arr[minIdx], arr[j]);
+        if (comparisonResult) {
           minIdx = j;
+        } else {
+          // Add a step for when no change in minimum occurs
+          addStep(
+            `No change in minimum for ${arr[j]} and ${arr[minIdx]}`,
+            `Finding minimum element`,
+            metrics.comparisons,
+            metrics.swaps
+          );
         }
       }
       
       if (minIdx !== i) {
+        console.log(`Swapping ${arr[i]} and ${arr[minIdx]}`);
         swap(arr, i, minIdx);
         setArray([...arr]);
       }
@@ -239,7 +299,9 @@ const AlgorithmViewer = () => {
       setCurrentStep([i]);
       addStep(
         `Checking ${array[i]}`,
-        `Comparing with target ${searchTarget}`
+        `Comparing with target ${searchTarget}`,
+        metrics.comparisons,
+          metrics.swaps
       );
       await sleep(animationSpeed);
       
@@ -247,14 +309,18 @@ const AlgorithmViewer = () => {
         setCompleted([i]);
         addStep(
           `Found ${searchTarget}`,
-          `Target found at index ${i}`
+          `Target found at index ${i}`,
+          metrics.comparisons,
+          metrics.swaps
         );
         return;
       }
     }
     addStep(
       `${searchTarget} not found`,
-      `Target value not present in array`
+      `Target value not present in array`,
+      metrics.comparisons,
+      metrics.swaps
     );
   };
 
@@ -267,7 +333,9 @@ const AlgorithmViewer = () => {
       setCurrentStep([mid]);
       addStep(
         `Checking middle element ${array[mid]}`,
-        `Comparing with target ${searchTarget}`
+        `Comparing with target ${searchTarget}`,
+        metrics.comparisons,
+        metrics.swaps
       );
       await sleep(animationSpeed);
       
@@ -275,7 +343,9 @@ const AlgorithmViewer = () => {
         setCompleted([mid]);
         addStep(
           `Found ${searchTarget}`,
-          `Target found at index ${mid}`
+          `Target found at index ${mid}`,
+          metrics.comparisons,
+          metrics.swaps
         );
         return;
       }
@@ -284,20 +354,26 @@ const AlgorithmViewer = () => {
         left = mid + 1;
         addStep(
           `Moving right`,
-          `Target is larger than middle element`
+          `Target is larger than middle element`,
+          metrics.comparisons,
+          metrics.swaps
         );
       } else {
         right = mid - 1;
         addStep(
           `Moving left`,
-          `Target is smaller than middle element`
+          `Target is smaller than middle element`,
+          metrics.comparisons,
+          metrics.swaps
         );
       }
       await sleep(animationSpeed);
     }
     addStep(
       `${searchTarget} not found`,
-      `Target value not present in array`
+      `Target value not present in array`,
+      metrics.comparisons,
+      metrics.swaps
     );
   };
 
@@ -312,7 +388,9 @@ const AlgorithmViewer = () => {
       setCurrentStep([current]);
       addStep(
         `Visiting node ${current}`,
-        `Exploring neighbors`
+        `Exploring neighbors`,
+        metrics.comparisons,
+        metrics.swaps
       );
       await sleep(animationSpeed);
       
@@ -323,7 +401,9 @@ const AlgorithmViewer = () => {
           setCompleted(Array.from(visited));
           addStep(
             `Adding node ${neighbor}`,
-            `New node discovered`
+            `New node discovered`,
+            metrics.comparisons,
+          metrics.swaps
           );
           await sleep(animationSpeed);
         }
@@ -339,7 +419,9 @@ const AlgorithmViewer = () => {
     setCompleted(Array.from(visited));
     addStep(
       `Visiting node ${current}`,
-      `Exploring depth-first`
+      `Exploring depth-first`,
+      metrics.comparisons,
+      metrics.swaps
     );
     await sleep(animationSpeed);
     
@@ -374,7 +456,9 @@ const AlgorithmViewer = () => {
       
       addStep(
         `Visiting node ${current}`,
-        `Current distance: ${distances[current]}`
+        `Current distance: ${distances[current]}`,
+        metrics.comparisons,
+        metrics.swaps
       );
       await sleep(animationSpeed);
 
@@ -388,7 +472,9 @@ const AlgorithmViewer = () => {
         setCurrentStep([current, neighbor]);
         addStep(
           `Checking neighbor ${neighbor}`,
-          `Distance through ${current}: ${newDistance} (Current best: ${distances[neighbor]})`
+          `Distance through ${current}: ${newDistance} (Current best: ${distances[neighbor]})`,
+          metrics.comparisons,
+          metrics.swaps
         );
         await sleep(animationSpeed);
 
@@ -397,7 +483,9 @@ const AlgorithmViewer = () => {
           previous[neighbor] = current;
           addStep(
             `Updated distance to node ${neighbor}`,
-            `New shortest distance: ${newDistance}`
+            `New shortest distance: ${newDistance}`,
+            metrics.comparisons,
+            metrics.swaps
           );
           await sleep(animationSpeed);
         }
