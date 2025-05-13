@@ -79,7 +79,7 @@ const AlgorithmViewer = () => {
       detail,
       comparisons,
       swaps,
-      timeElapsed: Date.now() - metrics.startTime,
+      timeElapsed: metrics.startTime ? Date.now() - metrics.startTime : 0, // Use metrics.startTime
     };
     setSteps(prev => [...prev, newStep]);
     setCurrentStepIndex(prev => prev + 1);
@@ -128,7 +128,7 @@ const AlgorithmViewer = () => {
     setStepDetail('Select an algorithm and press Start');
     setSteps([]);
     setCurrentStepIndex(0);
-    setMetrics({ comparisons: 0, swaps: 0, startTime: 0 });
+    setMetrics({ comparisons: 0, swaps: 0, startTime: Date.now() });
   };
 
   const compare = (a: number, b: number): boolean => {
@@ -187,7 +187,7 @@ const AlgorithmViewer = () => {
             `No swap needed for ${arr[j]} and ${arr[j + 1]}`,
             `Pass ${i + 1}, Step ${j + 1}`,
             metrics.comparisons,
-            metrics.swaps
+            metrics.swaps,
           );
         }
       }
@@ -210,7 +210,7 @@ const AlgorithmViewer = () => {
         `Current element: ${key}`,
         `Finding correct position for ${key}`,
         metrics.comparisons,
-        metrics.swaps
+        metrics.swaps,
       );
       await sleep(animationSpeed);
       
@@ -220,7 +220,7 @@ const AlgorithmViewer = () => {
           `Comparing ${arr[j]} with ${key}`,
           `Finding correct position for ${key}`,
           metrics.comparisons,
-          metrics.swaps
+          metrics.swaps,
         );
         await sleep(animationSpeed);
 
@@ -235,7 +235,7 @@ const AlgorithmViewer = () => {
             `No shift needed for ${arr[j]} and ${key}`,
             `Finding correct position for ${key}`,
             metrics.comparisons,
-            metrics.swaps
+            metrics.swaps,
           );
           break;
         }
@@ -275,7 +275,7 @@ const AlgorithmViewer = () => {
             `No change in minimum for ${arr[j]} and ${arr[minIdx]}`,
             `Finding minimum element`,
             metrics.comparisons,
-            metrics.swaps
+            metrics.swaps,
           );
         }
       }
@@ -301,7 +301,7 @@ const AlgorithmViewer = () => {
         `Checking ${array[i]}`,
         `Comparing with target ${searchTarget}`,
         metrics.comparisons,
-          metrics.swaps
+          metrics.swaps,
       );
       await sleep(animationSpeed);
       
@@ -311,7 +311,7 @@ const AlgorithmViewer = () => {
           `Found ${searchTarget}`,
           `Target found at index ${i}`,
           metrics.comparisons,
-          metrics.swaps
+          metrics.swaps,
         );
         return;
       }
@@ -403,7 +403,7 @@ const AlgorithmViewer = () => {
             `Adding node ${neighbor}`,
             `New node discovered`,
             metrics.comparisons,
-          metrics.swaps
+            metrics.swaps
           );
           await sleep(animationSpeed);
         }
@@ -939,7 +939,7 @@ const AlgorithmViewer = () => {
                           Swaps: {step.swaps}
                         </span>
                         <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
-                          Time: {(step.timeElapsed / 1000).toFixed(1)}s
+                          Time: {step.timeElapsed ? `${((step.timeElapsed) / 1000).toFixed(1)}s` : '0.0s'}
                         </span>
                       </div>
                     </div>
