@@ -9,12 +9,19 @@ type SearchingAlgorithm = 'linear' | 'binary' | 'jump';
 type GraphAlgorithm = 'bfs' | 'dfs' | 'dijkstra';
 type Theme = 'light' | 'dark';
 
+// interface Node {
+//   id: number;
+//   x: number;
+//   y: number;
+//   connections: number[];
+//   weight?: number;
+// }
+
 interface Node {
   id: number;
   x: number;
   y: number;
-  connections: number[];
-  weight?: number;
+  connections: { id: number; weight: number }[]; 
 }
 
 interface Step {
@@ -38,17 +45,20 @@ interface Distance {
 const DEFAULT_ARRAY = [15, 8, 23, 12,34,67,8,34,56,23,1,23,12,90];
 const DEFAULT_SEARCH_TARGET = 15;
 
+// 
+
 const AlgorithmViewer = () => {
   const [category, setCategory] = useState<AlgorithmCategory>('sorting');
   const [theme, setTheme] = useState<Theme>('dark');
   const [nodes, setNodes] = useState<Node[]>([]);
+  const [graphGenerated, setGraphGenerated] = useState(false); // New state to track graph generation
   const [currentStep, setCurrentStep] = useState<number[]>([]);
   const [completed, setCompleted] = useState<number[]>([]);
   const [array, setArray] = useState<number[]>(DEFAULT_ARRAY);
   const [customInput, setCustomInput] = useState<string>('');
   const [running, setRunning] = useState(false);
-  const [stepDescription, setStepDescription] = useState<string>('');
-  const [stepDetail, setStepDetail] = useState<string>('');
+  const [stepDescription, setStepDescription] = useState<string>(''); 
+  const [stepDetail, setStepDetail] = useState<string>(''); 
   const [searchTarget, setSearchTarget] = useState<number>(DEFAULT_SEARCH_TARGET);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
@@ -64,22 +74,22 @@ const AlgorithmViewer = () => {
   const runningRef = useRef(false);
 
   useEffect(() => {
-    if (category === 'graph') {
-      generateGraph();
+    if (category === 'graph' && !graphGenerated) {
+      generateGraph();  // Only call generateGraph once
     } else {
       generateArray();
     }
-  }, [category]);
+  }, [category, graphGenerated]);  // Run when category or graphGenerated changes
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const addStep = (description: string, detail: string, comparisons: number, swaps: number) => {
+  const addStep = (description: string, detail: string) => {
     const newStep: Step = {
       description,
       detail,
-      comparisons,
-      swaps,
-      timeElapsed: Date.now() - metrics.startTime,
+      comparisons: metrics.comparisons,
+      swaps: metrics.swaps,
+      timeElapsed: Date.now() - metrics.startTime
     };
     setSteps(prev => [...prev, newStep]);
     setCurrentStepIndex(prev => prev + 1);
@@ -96,11 +106,12 @@ const AlgorithmViewer = () => {
   };
 
   const generateGraph = () => {
-    const graphSize = 8; // Reduced from 8 to 6 for better visibility
-    const radius = 100; // Reduced from 120 to 100
+    if(graphGenerated === true) return;
+    const graphSize = 8; 
+    const radius = 100; 
     const centerX = 150;
     const centerY = 150;
-    
+
     const newNodes: Node[] = Array.from({ length: graphSize }, (_, i) => {
       const angle = (i * 2 * Math.PI) / graphSize;
       return {
@@ -108,14 +119,13 @@ const AlgorithmViewer = () => {
         x: centerX + radius * Math.cos(angle),
         y: centerY + radius * Math.sin(angle),
         connections: [
-          (i + 1) % graphSize,
-          (i + graphSize - 1) % graphSize
-        ],
-        weight: Math.floor(Math.random() * 10) + 1 // Reduced weights from 10 to 5
+          { id: (i + 1) % graphSize, weight: Math.floor(Math.random() * 10) + 1 },
+        ]
       };
     });
-    
+
     setNodes(newNodes);
+    setGraphGenerated(true); // Set the graph as generated
     resetState();
   };
 
@@ -378,122 +388,134 @@ const AlgorithmViewer = () => {
   };
 
   // Graph Algorithms
-  const bfs = async () => {
-    const visited = new Set<number>();
-    const queue = [0];
-    visited.add(0);
-    
-    while (queue.length > 0 && runningRef.current) {
-      const current = queue.shift()!;
-      setCurrentStep([current]);
-      addStep(
-        `Visiting node ${current}`,
-        `Exploring neighbors`,
-        metrics.comparisons,
-        metrics.swaps
-      );
-      await sleep(animationSpeed);
-      
-      for (const neighbor of nodes[current].connections) {
-        if (!visited.has(neighbor)) {
-          queue.push(neighbor);
-          visited.add(neighbor);
-          setCompleted(Array.from(visited));
-          addStep(
-            `Adding node ${neighbor}`,
-            `New node discovered`,
-            metrics.comparisons,
-          metrics.swaps
-          );
-          await sleep(animationSpeed);
-        }
-      }
-    }
-  };
-
-  const dfs = async (current = 0, visited = new Set<number>()) => {
-    if (!runningRef.current) return;
-    
-    visited.add(current);
+ const bfs = async () => {
+  const visited = new Set<number>();
+  const queue = [0];
+  visited.add(0);
+  
+  while (queue.length > 0 && runningRef.current) {
+    const current = queue.shift()!;
     setCurrentStep([current]);
-    setCompleted(Array.from(visited));
     addStep(
       `Visiting node ${current}`,
-      `Exploring depth-first`,
+      `Exploring neighbors`,
       metrics.comparisons,
       metrics.swaps
     );
     await sleep(animationSpeed);
     
-    for (const neighbor of nodes[current].connections) {
+    for (const conn of nodes[current]?.connections || []) {
+      const neighbor = conn.id;
       if (!visited.has(neighbor)) {
-        await dfs(neighbor, visited);
+        queue.push(neighbor);
+        visited.add(neighbor);
+        setCompleted(Array.from(visited));
+        addStep(
+          `Adding node ${neighbor}`,
+          `New node discovered`,
+          metrics.comparisons,
+          metrics.swaps
+        );
+        await sleep(animationSpeed);
       }
     }
-  };
+  }
+};
+
+  const dfs = async (current = 0, visited = new Set<number>()) => {
+  if (!runningRef.current) return;
+
+  visited.add(current);
+  setCurrentStep([current]);
+  setCompleted(Array.from(visited));
+  addStep(
+    `Visiting node ${current}`,
+    `Exploring depth-first`,
+    metrics.comparisons,
+    metrics.swaps
+  );
+  await sleep(animationSpeed);
+
+  for (const conn of nodes[current]?.connections || []) {
+    const neighbor = conn.id;
+    if (!visited.has(neighbor)) {
+      await dfs(neighbor, visited);
+    }
+  }
+};
+
 
   const dijkstra = async () => {
-    const distances: Distance = {};
-    const previous: Distance = {};
-    const unvisited = new Set<number>();
+  const distances: Distance = {};
+  const previous: Distance = {};
+  const unvisited = new Set<number>();
 
-    nodes.forEach((_, index) => {
-      distances[index] = index === 0 ? 0 : Infinity;
-      previous[index] = -1;
-      unvisited.add(index);
-    });
+  // Initialize distances and previous node mapping
+  nodes.forEach((_, index) => {
+    distances[index] = index === 0 ? 0 : Infinity;
+    previous[index] = -1;
+    unvisited.add(index);
+  });
 
-    while (unvisited.size > 0 && runningRef.current) {
-      let current = Array.from(unvisited).reduce((min, node) => 
-        distances[node] < distances[min] ? node : min
-      , Array.from(unvisited)[0]);
+  while (unvisited.size > 0 && runningRef.current) {
+    // Select the unvisited node with the smallest distance
+    let current = Array.from(unvisited).reduce((min, node) =>
+      distances[node] < distances[min] ? node : min,
+      Array.from(unvisited)[0]
+    );
 
-      if (distances[current] === Infinity) break;
+    if (distances[current] === Infinity) break;
 
-      unvisited.delete(current);
-      setCompleted(Array.from(unvisited));
-      setCurrentStep([current]);
-      
+    unvisited.delete(current);
+    setCompleted(Array.from(unvisited));
+    setCurrentStep([current]);
+
+    addStep(
+      `Visiting node ${current}`,
+      `Current distance: ${distances[current]}`,
+      metrics.comparisons,
+      metrics.swaps
+    );
+    await sleep(animationSpeed);
+
+    const node = nodes[current];
+    if (!node) continue;
+
+    for (const conn of node.connections) {
+      const neighbor = conn.id;
+      const weight = conn.weight;
+
+      if (!unvisited.has(neighbor)) continue;
+
+      const newDistance = distances[current] + weight;
+
+      setCurrentStep([current, neighbor]);
       addStep(
-        `Visiting node ${current}`,
-        `Current distance: ${distances[current]}`,
+        `Checking neighbor ${neighbor}`,
+        `Distance through ${current}: ${newDistance} (Current best: ${distances[neighbor]})`,
         metrics.comparisons,
         metrics.swaps
       );
       await sleep(animationSpeed);
 
-      for (let i = 0; i < nodes[current].connections.length; i++) {
-        const neighbor = nodes[current].connections[i];
-        if (!unvisited.has(neighbor)) continue;
+      if (newDistance < distances[neighbor]) {
+        distances[neighbor] = newDistance;
+        previous[neighbor] = current;
 
-        const weight = nodes[current].weight || 1;
-        const newDistance = distances[current] + weight;
-
-        setCurrentStep([current, neighbor]);
         addStep(
-          `Checking neighbor ${neighbor}`,
-          `Distance through ${current}: ${newDistance} (Current best: ${distances[neighbor]})`,
+          `Updated distance to node ${neighbor}`,
+          `New shortest distance: ${newDistance}`,
           metrics.comparisons,
           metrics.swaps
         );
         await sleep(animationSpeed);
-
-        if (newDistance < distances[neighbor]) {
-          distances[neighbor] = newDistance;
-          previous[neighbor] = current;
-          addStep(
-            `Updated distance to node ${neighbor}`,
-            `New shortest distance: ${newDistance}`,
-            metrics.comparisons,
-            metrics.swaps
-          );
-          await sleep(animationSpeed);
-        }
       }
     }
+  }
 
-    return { distances, previous };
-  };
+  return { distances, previous };
+};
+
 
   const handleStart = async () => {
     if (running) {
@@ -793,39 +815,41 @@ const AlgorithmViewer = () => {
                 ) : (
                   <svg className="w-full h-full" viewBox="0 0 300 300">
                     {/* Edges */}
-                    {nodes.map(node => 
-                      node.connections.map(conn => (
-                        <g key={`${node.id}-${conn}`}>
-                          <line
-                            x1={node.x}
-                            y1={node.y}
-                            x2={nodes[conn].x}
-                            y2={nodes[conn].y}
-                            stroke={
-                              currentStep.includes(node.id) && currentStep.includes(conn)
+                    
+                                      {nodes.map(node =>
+                    node.connections.map(conn => (
+                      <g key={`${node.id}-${conn.id}`}>
+                        <line
+                          x1={node.x}
+                          y1={node.y}
+                          x2={nodes[conn.id].x}
+                          y2={nodes[conn.id].y}
+                          stroke={
+                              currentStep.includes(node.id) && currentStep.includes(conn.id)
                                 ? '#FBBF24'
                                 : theme === 'dark'
                                 ? '#4B5563'
                                 : '#94A3B8'
                             }
                             strokeWidth={
-                              currentStep.includes(node.id) && currentStep.includes(conn)
+                              currentStep.includes(node.id) && currentStep.includes(conn.id)
                                 ? '3'
                                 : '2'
                             }
-                          />
-                          <text
-                            x={(node.x + nodes[conn].x) / 2}
-                            y={(node.y + nodes[conn].y) / 2}
-                            fill={theme === 'dark' ? '#9CA3AF' : '#4B5563'}
-                            textAnchor="middle"
-                            className="text-sm"
-                          >
-                            {node.weight}
-                          </text>
-                        </g>
-                      ))
-                    )}
+                        />
+                        <text
+                          x={(node.x + nodes[conn.id].x) / 2}
+                          y={(node.y + nodes[conn.id].y) / 2}
+                          textAnchor="middle"
+                          className="text-sm"
+                          fill={theme === 'dark' ? '#9CA3AF' : '#4B5563'}
+                        >
+                          {conn.weight}
+                        </text>
+                      </g>
+                    ))
+                  )}
+
                     {/* Nodes */}
                     {nodes.map((node, idx) => (
                       <g key={node.id}>
