@@ -13,8 +13,7 @@ interface Node {
   id: number;
   x: number;
   y: number;
-  connections: number[];
-  weight?: number;
+  connections: { id: number; weight: number }[]; 
 }
 
 interface Step {
@@ -42,13 +41,14 @@ const AlgorithmViewer = () => {
   const [category, setCategory] = useState<AlgorithmCategory>('sorting');
   const [theme, setTheme] = useState<Theme>('dark');
   const [nodes, setNodes] = useState<Node[]>([]);
+  const [graphGenerated, setGraphGenerated] = useState(false); // New state to track graph generation
   const [currentStep, setCurrentStep] = useState<number[]>([]);
   const [completed, setCompleted] = useState<number[]>([]);
   const [array, setArray] = useState<number[]>(DEFAULT_ARRAY);
   const [customInput, setCustomInput] = useState<string>('');
   const [running, setRunning] = useState(false);
-  const [stepDescription, setStepDescription] = useState<string>('');
-  const [stepDetail, setStepDetail] = useState<string>('');
+  const [stepDescription, setStepDescription] = useState<string>(''); 
+  const [stepDetail, setStepDetail] = useState<string>(''); 
   const [searchTarget, setSearchTarget] = useState<number>(DEFAULT_SEARCH_TARGET);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
@@ -64,12 +64,12 @@ const AlgorithmViewer = () => {
   const runningRef = useRef(false);
 
   useEffect(() => {
-    if (category === 'graph') {
-      generateGraph();
+    if (category === 'graph' && !graphGenerated) {
+      generateGraph();  // Only call generateGraph once
     } else {
       generateArray();
     }
-  }, [category]);
+  }, [category, graphGenerated]); 
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -96,11 +96,12 @@ const AlgorithmViewer = () => {
   };
 
   const generateGraph = () => {
-    const graphSize = 8; // Reduced from 8 to 6 for better visibility
-    const radius = 100; // Reduced from 120 to 100
+    if(graphGenerated === true) return;
+    const graphSize = 8; 
+    const radius = 100; 
     const centerX = 150;
     const centerY = 150;
-    
+
     const newNodes: Node[] = Array.from({ length: graphSize }, (_, i) => {
       const angle = (i * 2 * Math.PI) / graphSize;
       return {
@@ -108,16 +109,16 @@ const AlgorithmViewer = () => {
         x: centerX + radius * Math.cos(angle),
         y: centerY + radius * Math.sin(angle),
         connections: [
-          (i + 1) % graphSize,
-          (i + graphSize - 1) % graphSize
-        ],
-        weight: Math.floor(Math.random() * 10) + 1 // Reduced weights from 10 to 5
+          { id: (i + 1) % graphSize, weight: Math.floor(Math.random() * 10) + 1 },
+        ]
       };
     });
-    
+
     setNodes(newNodes);
+    setGraphGenerated(true); // Set the graph as generated
     resetState();
   };
+
 
   const resetState = () => {
     setCurrentStep([]);
@@ -394,13 +395,13 @@ const AlgorithmViewer = () => {
       );
       await sleep(animationSpeed);
       
-      for (const neighbor of nodes[current].connections) {
-        if (!visited.has(neighbor)) {
-          queue.push(neighbor);
-          visited.add(neighbor);
+      for (const { id: neighborId } of nodes[current].connections) {
+        if (!visited.has(neighborId)) {
+          queue.push(neighborId);
+          visited.add(neighborId);
           setCompleted(Array.from(visited));
           addStep(
-            `Adding node ${neighbor}`,
+            `Adding node ${neighborId}`,
             `New node discovered`,
             metrics.comparisons,
             metrics.swaps
@@ -425,9 +426,9 @@ const AlgorithmViewer = () => {
     );
     await sleep(animationSpeed);
     
-    for (const neighbor of nodes[current].connections) {
-      if (!visited.has(neighbor)) {
-        await dfs(neighbor, visited);
+    for (const { id: neighborId } of nodes[current].connections) {
+      if (!visited.has(neighborId)) {
+        await dfs(neighborId, visited);
       }
     }
   };
@@ -463,10 +464,10 @@ const AlgorithmViewer = () => {
       await sleep(animationSpeed);
 
       for (let i = 0; i < nodes[current].connections.length; i++) {
-        const neighbor = nodes[current].connections[i];
+        const  { id: neighbor, weight } = nodes[current].connections[i];
         if (!unvisited.has(neighbor)) continue;
 
-        const weight = nodes[current].weight || 1;
+        
         const newDistance = distances[current] + weight;
 
         setCurrentStep([current, neighbor]);
@@ -795,12 +796,12 @@ const AlgorithmViewer = () => {
                     {/* Edges */}
                     {nodes.map(node => 
                       node.connections.map(conn => (
-                        <g key={`${node.id}-${conn}`}>
+                        <g key={`${node.id}-${conn.id}`}>
                           <line
                             x1={node.x}
                             y1={node.y}
-                            x2={nodes[conn].x}
-                            y2={nodes[conn].y}
+                            x2={nodes[conn.id].x}
+                            y2={nodes[conn.id].y}
                             stroke={
                               currentStep.includes(node.id) && currentStep.includes(conn)
                                 ? '#FBBF24'
@@ -815,13 +816,13 @@ const AlgorithmViewer = () => {
                             }
                           />
                           <text
-                            x={(node.x + nodes[conn].x) / 2}
-                            y={(node.y + nodes[conn].y) / 2}
+                            x={(node.x + nodes[conn.id].x) / 2}
+                            y={(node.y + nodes[conn.id].y) / 2}
                             fill={theme === 'dark' ? '#9CA3AF' : '#4B5563'}
                             textAnchor="middle"
                             className="text-sm"
                           >
-                            {node.weight}
+                            {conn.weight}
                           </text>
                         </g>
                       ))
