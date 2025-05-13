@@ -53,7 +53,7 @@ function App() {
             <Code className="w-48 h-48 text-blue-600 dark:text-blue-400" />
           </div>
           <h1 className="relative text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent animate-gradient">
-            AlgoLens
+            Sortify
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
             Visualize algorithms like never before
